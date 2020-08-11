@@ -1,0 +1,25 @@
+[package]
+name = "ruoste"
+version = "0.1.0"
+authors = ["Joinemm <joonas.rautiola@hotmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+env_logger = "0.7.1"
+kankyo = "0.3"
+futures = { version = "0.3" }
+tokio = {version = "0.2", features = ["full"] }
+reqwest = "0.10.7"
+chrono = "0.4.13"
+
+[dependencies.sqlx]
+version = "0.4.0-beta.1"
+default-features = false
+features = [ "runtime-tokio", "macros", "postgres"]
+
+[dependencies.serenity]
+git = "https://github.com/acdenisSK/serenity"
+branch = "await_next"
