@@ -1,8 +1,15 @@
 use crate::modules::types::*;
-use serenity::framework::standard::{macros::command, Args, CommandResult};
+use serenity::framework::standard::{
+    macros::{command, group},
+    Args, CommandResult,
+};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use sqlx::Row;
+
+#[group]
+#[commands(quit, dbe, dbq)]
+struct Owner;
 
 #[command]
 #[owners_only]

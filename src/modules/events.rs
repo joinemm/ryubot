@@ -24,11 +24,11 @@ pub async fn after_hook(ctx: &Context, msg: &Message, _cmd_name: &str, error: Re
             "Command error [ {}#{} {} ]: {:?}",
             msg.author.name, msg.author.discriminator, msg.content, why
         );
-        let _ = msg.channel_id.say(&ctx, format!("```rs\n{:?}\n```", why)).await;
+        let _ = msg.channel_id.say(&ctx, format!("```rs\n{}\n```", why)).await;
     // no error, just log the command usage
     } else {
         info!(
-            "{}#{} used {}",
+            "{}#{} used {} (took TODO)",
             msg.author.name, msg.author.discriminator, msg.content
         )
     }
@@ -43,6 +43,30 @@ pub async fn before_hook(_ctx: &Context, _msg: &Message, cmd_name: &str) -> bool
 #[hook]
 pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
     match error {
+        DispatchError::CheckFailed(s, reason) => {
+            let _ = msg
+                .channel_id
+                .say(ctx, format!("The command checks have failed {}\n{:?}", s, reason))
+                .await;
+        }
+        DispatchError::CommandDisabled(s) => {
+            let _ = msg
+                .channel_id
+                .say(ctx, format!("This command is disabled! {}", s))
+                .await;
+        }
+        DispatchError::OnlyForDM => {
+            let _ = msg
+                .channel_id
+                .say(ctx, "This command can only be used in DMs.")
+                .await;
+        }
+        DispatchError::OnlyForGuilds => {
+            let _ = msg
+                .channel_id
+                .say(ctx, "This command can only be used in servers.")
+                .await;
+        }
         DispatchError::LackingPermissions(Permissions::ADMINISTRATOR) => {
             let _ = msg
                 .channel_id
@@ -52,12 +76,12 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
                 )
                 .await;
         }
-        DispatchError::LackingPermissions(Permissions::MANAGE_MESSAGES) => {
+        DispatchError::LackingPermissions(perms) => {
             let _ = msg
                 .channel_id
                 .say(
                     ctx,
-                    "You require **Manage messages** permission to execute this command!",
+                    format!("You require **{:?}** permission to execute this command!", perms),
                 )
                 .await;
         }
@@ -76,9 +100,9 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
         DispatchError::OnlyForOwners => {
             let _ = msg
                 .channel_id
-                .say(ctx, "Only the bot owner is able to use this!")
+                .say(ctx, "Only the bot owner can use this!")
                 .await;
         }
-        _ => println!("Unhandled dispatch error: {:?}", error),
+        _ => error!("Unhandled dispatch error: {:?}", error),
     }
 }

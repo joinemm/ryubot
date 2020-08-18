@@ -1,26 +1,18 @@
 use log::error;
-use serenity::{
-    framework::{standard::macros::group, StandardFramework},
-    http::Http,
-    prelude::*,
-};
+use serenity::{framework::StandardFramework, http::Http, prelude::*};
 use std::{collections::HashSet, env, sync::Arc};
-
+#[macro_use]
+extern crate quick_error;
 mod modules;
 use modules::database;
 use modules::events;
 use modules::types::*;
 
+mod apis;
+use apis::lastfm;
+
 mod commands;
-use commands::{general::*, owner::*};
-
-#[group]
-#[commands(ping, joke)]
-struct General;
-
-#[group]
-#[commands(quit, dbe, dbq)]
-struct Owner;
+use commands::{general::*, lastfm::*, owner::*};
 
 #[tokio::main]
 async fn main() {
@@ -29,6 +21,7 @@ async fn main() {
 
     let token = env::var("DISCORD_TOKEN").expect("No token found!");
     let database_credentials = env::var("DATABASE_CREDENTIALS").expect("No database credentials found!");
+    let lastfm_api_key = env::var("LASTFM_TOKEN").expect("No lastfm api key found!");
 
     let http = Http::new_with_token(&token);
 
@@ -43,8 +36,9 @@ async fn main() {
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
 
-    let reqwest_client = reqwest::Client::new();
+    let reqwest_client = Arc::new(reqwest::Client::new());
     let pool = database::get_pool(&database_credentials).await.unwrap();
+    let lastfm_client = lastfm::api::LastFm::new(lastfm_api_key);
 
     let framework = StandardFramework::new()
         .configure(|c| {
@@ -57,6 +51,7 @@ async fn main() {
         .before(events::before_hook)
         .on_dispatch_error(events::dispatch_error)
         .group(&GENERAL_GROUP)
+        .group(&LASTFM_GROUP)
         .group(&OWNER_GROUP)
         .help(&HELP);
 
@@ -68,8 +63,9 @@ async fn main() {
     {
         let mut data = client.data.write().await;
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
-        data.insert::<ReqwestClient>(Arc::new(reqwest_client));
+        data.insert::<ReqwestClient>(reqwest_client);
         data.insert::<ConnectionPool>(pool.clone());
+        data.insert::<LastFmClient>(lastfm_client);
     }
 
     if let Err(why) = client.start_autosharded().await {

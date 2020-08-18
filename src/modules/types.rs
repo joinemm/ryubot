@@ -1,7 +1,9 @@
+use crate::apis::lastfm;
 use reqwest::Client as Reqwest;
 use serenity::{client::bridge::gateway::ShardManager, prelude::*};
 use sqlx::PgPool;
 use std::sync::Arc;
+use std::time;
 
 pub struct ShardManagerContainer;
 
@@ -19,4 +21,10 @@ pub struct ConnectionPool;
 
 impl TypeMapKey for ConnectionPool {
     type Value = PgPool;
+}
+
+pub struct LastFmClient;
+
+impl TypeMapKey for LastFmClient {
+    type Value = lastfm::api::LastFm;
 }

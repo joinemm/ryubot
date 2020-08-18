@@ -3,13 +3,17 @@ use chrono::Utc;
 use serenity::{
     framework::standard::{
         help_commands,
-        macros::{command, help},
+        macros::{command, group, help},
         Args, CommandGroup, CommandResult, HelpOptions,
     },
     model::{channel::Message, id::UserId},
     prelude::*,
 };
 use std::collections::HashSet;
+
+#[group]
+#[commands(ping, joke)]
+struct General;
 
 #[help]
 async fn help(
