@@ -37,8 +37,8 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 async fn profile(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let username = args.single::<String>()?;
-    let body: GetInfo = lastfm::user::get_info(&ctx, &username).await?;
+    let username = args.single::<String>().unwrap();
+    let body: GetInfo = lastfm::user::get_info(&ctx, UserAuthentication::Username(username)).await?;
 
     msg.channel_id
         .send_message(&ctx.http, |m| {
@@ -62,7 +62,7 @@ async fn topalbums(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
 
     let body: GetTopAlbums = lastfm::user::get_top_albums(
         &ctx,
-        &username,
+        UserAuthentication::Username(username),
         &[("limit", &limit.to_string()), ("period", period.apiformat())],
     )
     .await?;

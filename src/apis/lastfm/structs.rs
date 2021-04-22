@@ -38,6 +38,20 @@ impl FromStr for TimePeriod {
     }
 }
 
+pub enum UserAuthentication {
+    SessionKey(String),
+    Username(String),
+}
+
+impl UserAuthentication {
+    pub fn params(&self) -> (String, String) {
+        match &*self {
+            UserAuthentication::SessionKey(key) => ("sk".to_string(), key.to_string()),
+            UserAuthentication::Username(name) => ("user".to_string(), name.to_string()),
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct LastFmError {
     pub error: u8,

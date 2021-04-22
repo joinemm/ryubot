@@ -3,7 +3,6 @@ use reqwest::Client as Reqwest;
 use serenity::{client::bridge::gateway::ShardManager, prelude::*};
 use sqlx::PgPool;
 use std::sync::Arc;
-use std::time;
 
 pub struct ShardManagerContainer;
 

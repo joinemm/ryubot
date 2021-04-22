@@ -1,4 +1,3 @@
-use log::{error, info};
 use serenity::{
     async_trait,
     framework::standard::{macros::hook, CommandError, DispatchError},
@@ -7,6 +6,7 @@ use serenity::{
     model::prelude::Permissions,
     prelude::*,
 };
+use tracing::{error, info};
 
 pub struct Handler;
 #[async_trait]
@@ -25,18 +25,14 @@ pub async fn after_hook(ctx: &Context, msg: &Message, _cmd_name: &str, error: Re
             msg.author.name, msg.author.discriminator, msg.content, why
         );
         let _ = msg.channel_id.say(&ctx, format!("```rs\n{}\n```", why)).await;
-    // no error, just log the command usage
-    } else {
-        info!(
-            "{}#{} used {} (took TODO)",
-            msg.author.name, msg.author.discriminator, msg.content
-        )
     }
 }
 
 #[hook]
-pub async fn before_hook(_ctx: &Context, _msg: &Message, cmd_name: &str) -> bool {
-    info!("Running command {}", cmd_name);
+#[instrument]
+pub async fn before_hook(_: &Context, msg: &Message, command_name: &str) -> bool {
+    info!("Got command '{}' by user '{}'", command_name, msg.author.name);
+
     true
 }
 
@@ -98,10 +94,7 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
                 .await;
         }
         DispatchError::OnlyForOwners => {
-            let _ = msg
-                .channel_id
-                .say(ctx, "Only the bot owner can use this!")
-                .await;
+            let _ = msg.channel_id.say(ctx, "Only the bot owner can use this!").await;
         }
         _ => error!("Unhandled dispatch error: {:?}", error),
     }
